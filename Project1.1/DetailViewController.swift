@@ -7,6 +7,22 @@
 
 import UIKit
 
+extension UIImage {
+    func withOrientation(_ orientation: UIImage.Orientation) -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(size, false, scale)
+        let rect = CGRect(origin: .zero, size: size)
+        draw(in: rect)
+        let normalizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        guard let image = normalizedImage else {
+            return self
+        }
+
+        return UIImage(cgImage: image.cgImage!, scale: scale, orientation: orientation)
+    }
+}
+
 class DetailViewController: UIViewController {
     @IBOutlet var imageView: UIImageView!
     var selectedImage: String?
@@ -37,12 +53,38 @@ class DetailViewController: UIViewController {
     
     
     @objc func shareTapped() {
-        guard let image = imageView?.image else {
-            print("No picture found")
-            return
+        guard let originalImage = imageView?.image, let imageData = originalImage.jpegData(compressionQuality: 1.0) else {
+               print("No picture found")
+               return
+           }
+
+           guard let image = UIImage(data: imageData) else {
+               print("Unable to load image data")
+               return
+           }
+        
+        let renderer = UIGraphicsImageRenderer(size: image.size)
+        
+        let sharedImage = renderer.image { ctx in
+            image.withOrientation(.up).draw(in: CGRect(origin: .zero, size: image.size))
+            
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 20),
+                .paragraphStyle: paragraphStyle
+            ]
+            
+            let string = "From Storm Viewer"
+            
+            let attributedString = NSAttributedString(string: string, attributes: attrs)
+            attributedString.draw(with: CGRect(x: 32, y: 32, width: image.size.width - 20, height: image.size.height - 20), options: .usesLineFragmentOrigin, context: nil)
         }
         
-        let vc = UIActivityViewController(activityItems: [image], applicationActivities: [])
+        imageView.image = sharedImage
+        
+        let vc = UIActivityViewController(activityItems: [sharedImage], applicationActivities: [])
         vc.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
         present(vc, animated: true)
     }
