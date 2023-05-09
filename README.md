@@ -1,6 +1,6 @@
 # Project 3 - Social Media
 
-Days 22 of 100 Days Of Swift
+Day 22 of 100 Days Of Swift
 
 Technique project: a project specifically dedicated to teaching one specific iOS or Swift skill. Sometimes it involved new projects, and other times involved changing existing projects.
 
